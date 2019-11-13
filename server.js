@@ -158,46 +158,181 @@ app.get('/incidents', (req, res) =>
 {
     new Promise((resolve, reject) =>
     {
+        var dbcall = "SELECT * FROM Incidents";
+        var result_array = [];
+        var is_where = false;
+        if(req.query.hasOwnProperty("start_date"))
+        {
+            if(is_where == false)
+            {
+                dbcall = dbcall + " WHERE date_time>=? ";
+                is_where = true;
+                result_array.push(req.query.start_date);
+            }
+            else
+            {
+                dbcall = dbcall + "AND date_time>=? ";
+                result_array.push(req.query.start_date);
+            }
+        }
+        if(req.query.hasOwnProperty("end_date"))
+        {
+            if(is_where == false)
+            {
+                dbcall = dbcall + " WHERE date_time<=? ";
+                is_where = true;
+                result_array.push(req.query.end_date);
+            }
+            else
+            {
+                dbcall = dbcall + "AND date_time<=? ";
+                result_array.push(req.query.end_date);
+            }
+        }
+        if(req.query.hasOwnProperty("code"))
+        {
+            let code_array = req.query.code.split(",");
+            if(is_where == false)
+            {
+                dbcall = dbcall + " WHERE (code=? ";
+                for(let i = 1; i < code_array.length; i++)
+                {
+                    dbcall = dbcall + " OR code=?";
+                }
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < code_array.length; i++)
+                {
+                    result_array.push(code_array[i]);
+                }
+                is_where = true;
+            }
+            else
+            {
+                dbcall = dbcall + "AND (code=?";
+                for(let i = 1; i < code_array.length; i++)
+                {
+                    dbcall = dbcall + " OR code=?";
+                }
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < code_array.length; i++)
+                {
+                    result_array.push(code_array[i]);
+                }
+            }
+        }
+        if(req.query.hasOwnProperty("grid"))
+        {
+            let grid_array = req.query.grid.split(",");
+            if(is_where == false)
+            {
+                dbcall = dbcall + " WHERE (police_grid=? ";
+                for(let i = 1; i < grid_array.length; i++)
+                {
+                    dbcall = dbcall + " OR police_grid=?";
+                }
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < grid_array.length; i++)
+                {
+                    result_array.push(grid_array[i]);
+                }
+                is_where = true;
+            }
+            else
+            {
+                dbcall = dbcall + "AND (police_grid=?";
+                for(let i = 1; i < grid_array.length; i++)
+                {
+                    dbcall = dbcall + " OR police_grid=?";
+                }
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < grid_array.length; i++)
+                {
+                    result_array.push(grid_array[i]);
+                }
+            }
+        }
         if(req.query.hasOwnProperty("id"))
         {
-            var code_array = req.query.code.split(",");
-            //console.log(code_array);
-        }
-        else
-        {
-            db.all("SELECT * FROM Incidents ORDER BY date_time DESC", (err, row) =>
+            let id_array = req.query.id.split(",");
+            if(is_where == false)
             {
-                var result = {};
-                if(err)
+                dbcall = dbcall + " WHERE (neighborhood_number=? ";
+                for(let i = 1; i < id_array.length; i++)
                 {
-                    reject(err);
+                    dbcall = dbcall + " OR neighborhood_number=?";
                 }
-                else
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < id_array.length; i++)
                 {
-                    for(let i = 0; i < row.length; i++)
+                    result_array.push(id_array[i]);
+                }
+                is_where = true;
+            }
+            else
+            {
+                dbcall = dbcall + "AND (neighborhood_number=?";
+                for(let i = 1; i < id_array.length; i++)
+                {
+                    dbcall = dbcall + " OR neighborhood_number=?";
+                }
+                dbcall = dbcall + ") ";
+                for(let i = 0; i < id_array.length; i++)
+                {
+                    result_array.push(id_array[i]);
+                }
+            }
+        }
+        dbcall = dbcall + " ORDER BY date_time DESC";
+        console.log(dbcall);
+        console.log(result_array);
+        db.all(dbcall, result_array, (err, row) =>
+        {
+            //console.log(row);
+            var result = {};
+            if(err)
+            {
+                reject(err);
+            }
+            else
+            {
+                var limit = row.length;
+                if(req.query.hasOwnProperty("limit"))
+                {
+                    limit = parseInt(req.query.limit);
+                    if(limit > row.length)
                     {
-                        let datetimearray = row[i]["date_time"].split("T");
-                        result["I"+row[i]["case_number"]] = 
-                        {
-                            "date": datetimearray[0],
-                            "time": datetimearray[1].substring(0, datetimearray[1].indexOf(".")),
-                            "code": row[i]["neighborhood_name"],
-                            "incident": row[i]["incident"],
-                            "police_grid": row[i]["police_grid"],
-                            "neighborhood_number": row[i]["neighborhood_number"],
-                            "block": row[i]["block"]
-                        }
+                        limit = row.length;
                     }
                 }
-                //console.log(JSON.stringify(result));
-                resolve(result);
-            });
-        }
+                for(let i = 0; i < limit; i++)
+                {
+                    let datetimearray = row[i]["date_time"].split("T");
+                    result["I"+row[i]["case_number"]] = 
+                    {
+                        "date": datetimearray[0],
+                        "time": datetimearray[1].substring(0, datetimearray[1].indexOf(".")),
+                        "code": row[i]["code"],
+                        "incident": row[i]["incident"],
+                        "police_grid": row[i]["police_grid"],
+                        "neighborhood_number": row[i]["neighborhood_number"],
+                        "block": row[i]["block"]
+                    }
+                }
+            }
+            //console.log(result);
+            resolve(result);
+        });
     }).then((data) =>
     {
         if(req.query.hasOwnProperty("format") && req.query.format.toLowerCase() === "xml")
         {
-            res.type("xml").send(json2xml.parse("Neighborhoods", data));
+            let element = {user: 1};
+            let xml = json2xml.parse("incidents", element);
+            for(var key in data)
+            {
+                json2xml.parseToExistingElement(xml, key);
+            }
+            res.type("xml").send(xml);
         }
         else
         {
@@ -208,31 +343,62 @@ app.get('/incidents', (req, res) =>
 
 app.put('/new-incident', (req, res) =>
 {
-    var new_obj = {users: []};
-    if(req.query.hasOwnProperty("limit"))
+    if(req.body.hasOwnProperty("case_number") == false)
     {
-        for(let i = 0; i < Math.min(parseInt(req.query.limit, 10), users.users.length); i++)
+        res.status(500).send("Need a case number.");
+    }
+    var new_obj = 
+    {
+        case_number: req.body.case_number
+    }
+    if(req.body.hasOwnProperty("date"))
+    {
+        new_obj["date_time"] = req.body.date;
+    }
+    if(req.body.hasOwnProperty("time"))
+    {
+        new_obj["date_time"] = new_obj.date_time + "T" + req.body.time;
+    }
+    if(req.body.hasOwnProperty("code"))
+    {
+        new_obj["code"] = parseInt(req.body.code);
+    }
+    if(req.body.hasOwnProperty("incident"))
+    {
+        new_obj["incident"] = req.body.incident;
+    }
+    if(req.body.hasOwnProperty("police_grid"))
+    {
+        new_obj["police_grid"] = parseInt(req.body.police_grid);
+    }
+    if(req.body.hasOwnProperty("neighborhood_number"))
+    {
+        new_obj["neighborhood_number"] = parseInt(req.body.neighborhood_number);
+    }
+    if(req.body.hasOwnProperty("block"))
+    {
+        new_obj["block"] = req.body.block;
+    }
+    console.log(new_obj);
+    db.all("SELECT * FROM Incidents WHERE case_number=?", [new_obj.case_number], (err, row) =>
+    {
+        if(row.length > 0)
         {
-            new_obj.users.push(users.users[i]);
+            res.status(500).send("Case Number already exists.");
         }
-    }
-    else
-    {
-        for(let i = 0; i < users.users.length; i++)
+        if(err)
         {
-            new_obj.users.push(users.users[i]);
+            res.status(500).send("error accessing database");
         }
-    }
-    var result;
-    if(req.query.hasOwnProperty("format") && req.query.format.toLowerCase() === "xml")
+
+    });
+    db.run("INSERT INTO Incidents VALUES(?)", [new_obj.case_number, new_obj.date_time, new_obj.code, new_obj.incident, new_obj.police_grid, new_obj.neighborhood_number, new_obj.block], (err) =>
     {
-        result = convert("userlist", new_obj);
-        res.type("json").send(result);
-    }
-    else
-    {
-        res.type("json").send(new_obj);
-    }
+        if(err)
+        {
+            console.log("error putting in value into database");
+        }
+    });
 });
 var server = app.listen(port);
 console.log("Now listening on Port: " + port);
