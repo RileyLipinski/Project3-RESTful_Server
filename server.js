@@ -14,7 +14,7 @@ var db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
 var users;
 app.use(bodyParser.urlencoded({extended: true}));
 
-var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READONLY, (err) => {
+var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
     if (err) {
         console.log('Error opening ' + db_filename);
     }
@@ -50,10 +50,8 @@ app.get('/codes', (req, res) =>
                         result["C"+row[i]["code"]] = row[i]["incident_type"];
                     }
                 }
-                //console.log(JSON.stringify(result));
                 resolve(result);
             });
-            //console.log(code_array);
         }
         else
         {
@@ -71,7 +69,6 @@ app.get('/codes', (req, res) =>
                         result["C"+row[i]["code"]] = row[i]["incident_type"];
                     }
                 }
-                //console.log(JSON.stringify(result));
                 resolve(result);
             });
         }
@@ -116,10 +113,8 @@ app.get('/neighborhoods', (req, res) =>
                         result["C"+row[i]["neighborhood_number"]] = row[i]["neighborhood_name"];
                     }
                 }
-                //console.log(JSON.stringify(result));
                 resolve(result);
             });
-            //console.log(code_array);
         }
         else
         {
@@ -137,7 +132,6 @@ app.get('/neighborhoods', (req, res) =>
                         result["N"+row[i]["neighborhood_number"]] = row[i]["neighborhood_name"];
                     }
                 }
-                //console.log(JSON.stringify(result));
                 resolve(result);
             });
         }
@@ -187,6 +181,13 @@ app.get('/incidents', (req, res) =>
             {
                 dbcall = dbcall + "AND date_time<=? ";
                 result_array.push(req.query.end_date);
+            }
+        }
+        if(req.query.hasOwnProperty("start_date") == false && req.query.hasOwnProperty("end_date") == false)
+        {
+            if(is_where == false)
+            {
+                console.log("uhhh");
             }
         }
         if(req.query.hasOwnProperty("code"))
@@ -283,15 +284,16 @@ app.get('/incidents', (req, res) =>
             }
         }
         dbcall = dbcall + " ORDER BY date_time DESC";
-        console.log(dbcall);
-        console.log(result_array);
         db.all(dbcall, result_array, (err, row) =>
         {
-            //console.log(row);
             var result = {};
             if(err)
             {
                 reject(err);
+            }
+            else if(row.length <= 0)
+            {
+                res.status(500).send("Nothing with such queries exists.");
             }
             else
             {
@@ -304,35 +306,55 @@ app.get('/incidents', (req, res) =>
                         limit = row.length;
                     }
                 }
+                else
+                {
+                    limit = 10000;
+                }
                 for(let i = 0; i < limit; i++)
                 {
-                    let datetimearray = row[i]["date_time"].split("T");
-                    result["I"+row[i]["case_number"]] = 
+                    if(row[i] != undefined)
                     {
-                        "date": datetimearray[0],
-                        "time": datetimearray[1].substring(0, datetimearray[1].indexOf(".")),
-                        "code": row[i]["code"],
-                        "incident": row[i]["incident"],
-                        "police_grid": row[i]["police_grid"],
-                        "neighborhood_number": row[i]["neighborhood_number"],
-                        "block": row[i]["block"]
+                        let datetimearray = [];
+                        if(row[i]["date_time"].indexOf("T") >= 0)
+                        {
+                            datetimearray = row[i]["date_time"].split("T");
+                        }
+                        else if(row[i]["date_time"].indexOf("-") >= 0)
+                        {
+                            datetimearray = [row[i]["date_time"], ""];
+                        }
+                        else if(row[i]["date_time"].indexOf(":") >= 0)
+                        {
+                            datetimearray = ["", row[i]["date_time"]];
+                        }
+                        else
+                        {
+                            datetimearray = ["", ""];
+                        }
+                        if(datetimearray[1].indexOf(".") >= 0)
+                        {
+                            datetimearray[1] = datetimearray[1].substring(0, datetimearray[1].indexOf("."));
+                        }
+                        result["I"+row[i]["case_number"]] = 
+                        {
+                            "date": datetimearray[0],
+                            "time": datetimearray[1],
+                            "code": row[i]["code"],
+                            "incident": row[i]["incident"],
+                            "police_grid": row[i]["police_grid"],
+                            "neighborhood_number": row[i]["neighborhood_number"],
+                            "block": row[i]["block"]
+                        }
                     }
                 }
             }
-            //console.log(result);
             resolve(result);
         });
     }).then((data) =>
     {
         if(req.query.hasOwnProperty("format") && req.query.format.toLowerCase() === "xml")
         {
-            let element = {user: 1};
-            let xml = json2xml.parse("incidents", element);
-            for(var key in data)
-            {
-                json2xml.parseToExistingElement(xml, key);
-            }
-            res.type("xml").send(xml);
+            res.type("xml").send(json2xml.parse("incidents", data));
         }
         else
         {
@@ -349,7 +371,13 @@ app.put('/new-incident', (req, res) =>
     }
     var new_obj = 
     {
-        case_number: req.body.case_number
+        case_number: req.body.case_number,
+        date_time: "",
+        code: "",
+        incident: "",
+        police_grid: "",
+        neighborhood_number: "",
+        block: ""
     }
     if(req.body.hasOwnProperty("date"))
     {
@@ -379,7 +407,6 @@ app.put('/new-incident', (req, res) =>
     {
         new_obj["block"] = req.body.block;
     }
-    console.log(new_obj);
     db.all("SELECT * FROM Incidents WHERE case_number=?", [new_obj.case_number], (err, row) =>
     {
         if(row.length > 0)
@@ -392,11 +419,13 @@ app.put('/new-incident', (req, res) =>
         }
 
     });
-    db.run("INSERT INTO Incidents VALUES(?)", [new_obj.case_number, new_obj.date_time, new_obj.code, new_obj.incident, new_obj.police_grid, new_obj.neighborhood_number, new_obj.block], (err) =>
+    db.run("INSERT INTO incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) VALUES (?, ?, ?, ?, ?, ?, ?)", [new_obj.case_number, new_obj.date_time, new_obj.code, new_obj.incident, new_obj.police_grid, new_obj.neighborhood_number, new_obj.block], (err) =>
     {
         if(err)
         {
+            res.status(500).send("error inserting value into database");
             console.log("error putting in value into database");
+            console.log(err);
         }
     });
 });
