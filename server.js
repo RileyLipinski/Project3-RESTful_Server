@@ -360,6 +360,9 @@ app.get('/incidents', (req, res) =>
         {
             res.type("json").send(data);
         }
+    }).catch((err) =>
+    {
+        res.status(500).send("An error has occurred. Check query syntax.");
     });
 });
 
