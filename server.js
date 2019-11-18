@@ -183,13 +183,13 @@ app.get('/incidents', (req, res) =>
                 result_array.push(req.query.end_date);
             }
         }
-        if(req.query.hasOwnProperty("start_date") == false && req.query.hasOwnProperty("end_date") == false)
-        {
-            if(is_where == false)
-            {
-                console.log("uhhh");
-            }
-        }
+        // if(req.query.hasOwnProperty("start_date") == false && req.query.hasOwnProperty("end_date") == false)
+        // {
+        //     if(is_where == false)
+        //     {
+        //         console.log("uhhh");
+        //     }
+        // }
         if(req.query.hasOwnProperty("code"))
         {
             let code_array = req.query.code.split(",");
