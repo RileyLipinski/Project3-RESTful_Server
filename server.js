@@ -189,13 +189,6 @@ app.get('/incidents', (req, res) =>
                 result_array.push(req.query.end_date);
             }
         }
-        // if(req.query.hasOwnProperty("start_date") == false && req.query.hasOwnProperty("end_date") == false)
-        // {
-        //     if(is_where == false)
-        //     {
-        //         console.log("uhhh");
-        //     }
-        // }
         if(req.query.hasOwnProperty("code"))
         {
             let code_array = req.query.code.split(",");
@@ -422,21 +415,29 @@ app.put('/new-incident', (req, res) =>
         {
             res.status(500).send("Case Number already exists.");
         }
-        if(err)
+        else if(err)
         {
             res.status(500).send("error accessing database");
         }
+        else
+        {
+            db.run("INSERT INTO incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) VALUES (?, ?, ?, ?, ?, ?, ?)", [new_obj.case_number, new_obj.date_time, new_obj.code, new_obj.incident, new_obj.police_grid, new_obj.neighborhood_number, new_obj.block], (err) =>
+            {
+                if(err)
+                {
+                    res.status(500).send("error inserting value into database");
+                    console.log("error putting in value into database");
+                    console.log(err);
+                }
+                else
+                {
+                    res.send("successfully added incident.");
+                }
+            });
+        }
 
     });
-    db.run("INSERT INTO incidents (case_number, date_time, code, incident, police_grid, neighborhood_number, block) VALUES (?, ?, ?, ?, ?, ?, ?)", [new_obj.case_number, new_obj.date_time, new_obj.code, new_obj.incident, new_obj.police_grid, new_obj.neighborhood_number, new_obj.block], (err) =>
-    {
-        if(err)
-        {
-            res.status(500).send("error inserting value into database");
-            console.log("error putting in value into database");
-            console.log(err);
-        }
-    });
+
 });
 var server = app.listen(port);
 console.log("Now listening on Port: " + port);
