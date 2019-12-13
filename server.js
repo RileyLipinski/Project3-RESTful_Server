@@ -3,6 +3,7 @@ var path = require('path');
 var bodyParser = require("body-parser");
 var json2xml = require("js2xmlparser");
 var sqlite3 = require('sqlite3');
+var cors = require("cors");
 
 var myArgs = process.argv.slice(2);
 
@@ -22,6 +23,7 @@ else
 }
 var users;
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cors());
 
 //opens the database
 var db = new sqlite3.Database(db_filename, sqlite3.OPEN_READWRITE, (err) => {
