@@ -4,13 +4,22 @@ var bodyParser = require("body-parser");
 var json2xml = require("js2xmlparser");
 var sqlite3 = require('sqlite3');
 
+var myArgs = process.argv.slice(2);
+
 // NPM modules
 var express = require('express');
 var app = express();
-var port = 8000;
 var dir = __dirname;
 var db_filename = path.join(__dirname, 'db', 'stpaul_crime.sqlite3');
 
+if(myArgs.length > 0)
+{
+    var port = myArgs[0];
+}
+else
+{
+    var port = 8000;
+}
 var users;
 app.use(bodyParser.urlencoded({extended: true}));
 
