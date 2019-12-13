@@ -5,12 +5,8 @@ var neighborhoods;
 var checkcount = 0;
 var markers = [];
 var myIcon = L.icon({
-    iconUrl: 'https://git.xhost.io/uploads/-/system/project/avatar/36/map-marker-icon.png?width=64',
-    iconSize: [38, 95],
-    iconAnchor: [22, 94],
-    popupAnchor: [-3, -76],
-    shadowSize: [68, 95],
-    shadowAnchor: [22, 94]
+    iconUrl: 'images/marker.png',
+    iconSize: [60, 60]
 });
 function neighborhoods(crime_api_url)
 {
