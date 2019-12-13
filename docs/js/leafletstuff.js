@@ -55,9 +55,7 @@ function mapUpdate(location)
             let querystring = "https://nominatim.openstreetmap.org/?addressdetails=1&q=" + location.replace(" ", "+") + "&format=json&limit=1";
             $.getJSON(querystring, (data) =>
             {
-                console.log(data);
                 globalLat = parseFloat(data["0"].lat);
-                console.log(globalLat);
                 globalLong = parseFloat(data["0"].lon);
                 mymap.panTo(new L.LatLng(globalLat, globalLong), 13);
             });
@@ -66,7 +64,6 @@ function mapUpdate(location)
         {   
         }
     }
-    console.log(mymap.getCenter());
 
 }
 function mapInit()
@@ -89,12 +86,8 @@ function mapInit()
         
         let marker =  L.marker([neighborhoods[key2][0], neighborhoods[key2][1]], {title: neighborhoods[key2][3] + ""}).addTo(mymap);
         neighborhoods[key2][4] = marker;
-        //console.log(JSON.stringify(neighborhoods));
         marker.bindPopup(neighborhoods[key2][2] + "").openPopup();
     }
-    // neighborhoods["N17"][2] = 0;
-    // neighborhoods["N17"][4].bindPopup(neighborhoods[key2][2] + "").openPopup();
-    // console.log(neighborhoods);
     mapUpdate("44.952,-93.090");
 
 }
@@ -105,20 +98,12 @@ function updatePan()
         globalLat = mymap.getCenter().lat.toFixed(3);
         globalLong = mymap.getCenter().lng.toFixed(3);
         mapInput.Location = globalLat + "," + globalLong;
-        //console.log(mymap.getBounds());
     });
 
-    mymap.on("moveend", function() {
-        //console.log(mapTable.ready);   
+    mymap.on("moveend", function() {   
         mapTable.crimes = {};
         for(var key in crime_data)
         {
-           // console.log(neighborhoods["N" + crime_data[key].neighborhood_number][0]);
-        //    console.log(mymap.getBounds()._northEast.lat);
-        //    console.log(mymap.getBounds()._southWest.lat);
-        //    console.log(mymap.getBounds()._northEast.lng);
-        //    console.log(mymap.getBounds()._southWest.lng);
-            //console.log(crime_data[key].neighborhood_number);
             if(neighborhoods["N" + crime_data[key].neighborhood_number][0] < parseFloat(mymap.getBounds()._northEast.lat) && neighborhoods["N" + crime_data[key].neighborhood_number][0] > parseFloat(mymap.getBounds()._southWest.lat) && neighborhoods["N" + crime_data[key].neighborhood_number][1] < parseFloat(mymap.getBounds()._northEast.lng) && neighborhoods["N" + crime_data[key].neighborhood_number][1] > parseFloat(mymap.getBounds()._southWest.lng))
             {
                 if((crime_data[key].code >= 110 && crime_data[key].code <= 220) || (crime_data[key].code >= 400 && crime_data[key].code <= 453) || (crime_data[key].code >= 810 && crime_data[key].code <= 863))
@@ -163,16 +148,11 @@ function updatePan()
 
             }
         }
-        //mapTable.changeReady(true);
-        //console.log(mapTable.ready);
-        //console.log(crime_in_view);
-        //console.log(mymap.getBounds());
     });
 }
 
 function updateMarkers()
 {
-    console.log("called");
     for(let neighkey in neighborhoods)
     {
         neighborhoods[neighkey][2] = 0;
@@ -181,10 +161,8 @@ function updateMarkers()
     {
         neighborhoods["N" + crime_data[crimekey].neighborhood_number][2]++; 
     }
-    console.log(JSON.stringify(crime_data));
     for(let neighkey in neighborhoods)
     {
-        console.log(neighborhoods[neighkey][2]);
         neighborhoods[neighkey][4].bindPopup(neighborhoods[neighkey][2] + "").openPopup();
     }
 }
@@ -198,15 +176,11 @@ function addMapMarker(item)
     block =item.block.replace("X","0");
     block = block.replace("&","and");
     let querystring = "https://nominatim.openstreetmap.org/?addressdetails=1&q=" + block + " St. Paul MN" + "&format=json&limit=1";
-    console.log(querystring);
     $.getJSON(querystring, (data) =>
     {
-        //console.log(data);
         if(data.length > 0) {
         lat = parseFloat(data["0"].lat);
-        //console.log(globalLat);
         long = parseFloat(data["0"].lon);
-        console.log(long);
         var markerElement = document.createElement("div");
         markerElement.textContent = item.incident + "\n" + item.date + "\n" + item.time;
         var deleteButton = document.createElement("button");

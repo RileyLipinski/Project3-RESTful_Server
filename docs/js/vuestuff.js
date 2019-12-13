@@ -189,7 +189,6 @@ var checkboxes = new Vue({
 
             }
             query = query.substring(0, query.length - 1);
-            console.log(query);
             
             $.ajax({
                 url: query,
@@ -208,15 +207,6 @@ var checkboxes = new Vue({
                   //alert( "ERROR:  " + data );
                 }
               });
-            
-            
-            //  $.getJSON(query, (data) =>
-            // {
-            //     console.log("hello");
-            //     crime_data = data;
-            //     updateMarkers();
-            //     mapUpdate("" + (parseFloat(globalLat) + .0000001) + "," + globalLong);
-            // });
         }
     }
 });
