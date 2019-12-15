@@ -1,7 +1,7 @@
 {
-    "name": "restful-server",
+    "name": "crime-server",
     "version": "0.0.0",
-    "description": "RESTful using Node JS",
+    "description": "RESTful and framework driven website that displays crimes",
     "author": {
         "name": "Riley Lipinski",
         "email": "lipi8497@stthomas.edu"
@@ -19,7 +19,7 @@
     "main": "server.js",
     "repository": {
         "type": "git",
-        "url": "https://github.com/nicholaslanger/Project2-DynamicServer.git"
+        "url": "https://github.com/nicholaslanger/Project3-DynamicServer.git"
     },
     "dependencies": {
         "express": "^4.17.1",
